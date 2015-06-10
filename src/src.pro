@@ -14,9 +14,11 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
+    qusbmode.cpp \
     qusbmoded.cpp
 
 PUBLIC_HEADERS += \
+    qusbmode.h \
     qusbmoded.h \
     qusbmoded_types.h
 

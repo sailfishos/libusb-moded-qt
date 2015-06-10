@@ -36,7 +36,6 @@
 #include "usb_moded_interface.h"
 
 #include "usb_moded-dbus.h"
-#include "usb_moded-modes.h"
 
 #define USB_MODED_CALL_GET_MODES    (0x01)
 #define USB_MODED_CALL_GET_CONFIG   (0x02)
@@ -67,28 +66,8 @@ public:
 const QString QUsbModed::Private::UsbModeSection("usbmode");
 const QString QUsbModed::Private::UsbModeKeyMode("mode");
 
-// States (from usb_moded-dbus.h)
-const QString QUsbModed::Mode::Connected(USB_CONNECTED);
-const QString QUsbModed::Mode::DataInUse(DATA_IN_USE);
-const QString QUsbModed::Mode::Disconnected(USB_DISCONNECTED);
-const QString QUsbModed::Mode::ModeRequest(USB_CONNECTED_DIALOG_SHOW);
-
-// Modes (from usb_moded-modes.h)
-const QString QUsbModed::Mode::Undefined(MODE_UNDEFINED);
-const QString QUsbModed::Mode::Ask(MODE_ASK);
-const QString QUsbModed::Mode::MassStorage(MODE_MASS_STORAGE);
-const QString QUsbModed::Mode::Developer(MODE_DEVELOPER);
-const QString QUsbModed::Mode::MTP(MODE_MTP);
-const QString QUsbModed::Mode::Host(MODE_HOST);
-const QString QUsbModed::Mode::ConnectionSharing(MODE_CONNECTION_SHARING);
-const QString QUsbModed::Mode::Diag(MODE_DIAG);
-const QString QUsbModed::Mode::Adb(MODE_ADB);
-const QString QUsbModed::Mode::PCSuite(MODE_PC_SUITE);
-const QString QUsbModed::Mode::Charging(MODE_CHARGING);
-const QString QUsbModed::Mode::Charger(MODE_CHARGER);
-
 QUsbModed::QUsbModed(QObject* aParent) :
-    QObject(aParent),
+    QUsbMode(aParent),
     iPrivate(new Private)
 {
     QDBusServiceWatcher* serviceWatcher =
