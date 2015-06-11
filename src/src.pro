@@ -2,6 +2,7 @@ TEMPLATE = lib
 TARGET = usb-moded-qt5
 CONFIG += link_pkgconfig
 PKGCONFIG += usb_moded
+VERSION = 1.1
 
 QT += dbus
 QT -= gui
