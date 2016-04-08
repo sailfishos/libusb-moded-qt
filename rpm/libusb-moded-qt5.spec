@@ -1,7 +1,7 @@
 Name:       libusb-moded-qt5
 
 Summary:    A library of Qt5 bindings for usb_moded
-Version:    1.1
+Version:    1.3
 Release:    1
 Group:      System/Libraries
 License:    BSD
