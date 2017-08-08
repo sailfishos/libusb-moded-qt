@@ -41,6 +41,7 @@
 #define USB_MODED_CALL_GET_CONFIG   (0x02)
 #define USB_MODED_CALL_MODE_REQUEST (0x04)
 #define USB_MODED_CALL_GET_HIDDEN   (0x08)
+#define USB_MODED_CALL_GET_AVAILABLE_MODES (0x10)
 
 class QUsbModed::Private
 {
@@ -49,6 +50,7 @@ public:
     static const QString UsbModeKeyMode;
 
     QStringList iSupportedModes;
+    QStringList iAvailableModes;
     QStringList iHiddenModes;
     QString iConfigMode;
     QString iCurrentMode;
@@ -97,6 +99,11 @@ QUsbModed::~QUsbModed()
 QStringList QUsbModed::supportedModes() const
 {
     return iPrivate->iSupportedModes;
+}
+
+QStringList QUsbModed::availableModes() const
+{
+    return iPrivate->iAvailableModes;
 }
 
 QStringList QUsbModed::hiddenModes() const
@@ -202,6 +209,10 @@ void QUsbModed::setup()
         SIGNAL(sig_usb_supported_modes_ind(QString)),
         SLOT(onUsbSupportedModesChanged(QString)));
     connect(iPrivate->iInterface,
+            &QUsbModedInterface::sig_usb_available_modes_ind,
+            this,
+            &QUsbModed::updateAvailableModes);
+    connect(iPrivate->iInterface,
         SIGNAL(sig_usb_hidden_modes_ind(QString)),
         SLOT(onUsbHiddenModesChanged(QString)));
     connect(iPrivate->iInterface,
@@ -214,6 +225,13 @@ void QUsbModed::setup()
         iPrivate->iInterface->get_modes(), iPrivate->iInterface),
         SIGNAL(finished(QDBusPendingCallWatcher*)),
         SLOT(onGetModesFinished(QDBusPendingCallWatcher*)));
+
+    iPrivate->iPendingCalls |= USB_MODED_CALL_GET_AVAILABLE_MODES;
+    connect(new QDBusPendingCallWatcher(
+        iPrivate->iInterface->get_available_modes(), iPrivate->iInterface),
+        &QDBusPendingCallWatcher::finished,
+        this,
+        &QUsbModed::onGetAvailableModesFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_CONFIG;
     connect(new QDBusPendingCallWatcher(
@@ -247,6 +265,21 @@ void QUsbModed::onGetModesFinished(QDBusPendingCallWatcher* aCall)
     updateSupportedModes(modes);
     aCall->deleteLater();
     setupCallFinished(USB_MODED_CALL_GET_MODES);
+}
+
+void QUsbModed::onGetAvailableModesFinished(QDBusPendingCallWatcher* aCall)
+{
+    QDBusPendingReply<QString> reply(*aCall);
+    QString modes;
+    if (!reply.isError()) {
+        modes = reply.value();
+        DEBUG_(modes);
+    } else {
+        DEBUG_(reply.error());
+    }
+    updateAvailableModes(modes);
+    aCall->deleteLater();
+    setupCallFinished(USB_MODED_CALL_GET_AVAILABLE_MODES);
 }
 
 void QUsbModed::onGetConfigFinished(QDBusPendingCallWatcher* aCall)
@@ -329,6 +362,21 @@ void QUsbModed::updateSupportedModes(QString aModes)
     if (iPrivate->iSupportedModes != modes) {
         iPrivate->iSupportedModes = modes;
         Q_EMIT supportedModesChanged();
+    }
+}
+
+void QUsbModed::updateAvailableModes(const QString &aModes)
+{
+    const QStringList result = aModes.split(',', QString::SkipEmptyParts);
+    const int n = result.count();
+    QStringList modes;
+    for (int i=0; i<n; i++) {
+        QString mode(result.at(i).trimmed());
+        if (!modes.contains(mode)) modes.append(mode);
+    }
+    if (iPrivate->iAvailableModes != modes) {
+        iPrivate->iAvailableModes = modes;
+        Q_EMIT availableModesChanged();
     }
 }
 
