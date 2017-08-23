@@ -45,6 +45,7 @@ class QUSBMODED_EXPORT QUsbModed : public QUsbMode
     Q_OBJECT
     Q_PROPERTY(bool available READ available NOTIFY availableChanged)
     Q_PROPERTY(QStringList supportedModes READ supportedModes NOTIFY supportedModesChanged)
+    Q_PROPERTY(QStringList availableModes READ availableModes NOTIFY availableModesChanged)
     Q_PROPERTY(QStringList hiddenModes READ hiddenModes NOTIFY hiddenModesChanged)
     Q_PROPERTY(QString currentMode READ currentMode WRITE setCurrentMode NOTIFY currentModeChanged)
     Q_PROPERTY(QString configMode READ configMode WRITE setConfigMode NOTIFY configModeChanged)
@@ -55,6 +56,7 @@ public:
 
     bool available() const;
     QStringList supportedModes() const;
+    QStringList availableModes() const;
     QString currentMode() const;
     QString configMode() const;
 
@@ -70,6 +72,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     void availableChanged();
     void supportedModesChanged();
+    void availableModesChanged();
     void currentModeChanged();
     void configModeChanged();
     void usbStateError(QString error);
@@ -81,6 +84,7 @@ private Q_SLOTS:
     void onServiceRegistered(QString service);
     void onServiceUnregistered(QString service);
     void onGetModesFinished(QDBusPendingCallWatcher* call);
+    void onGetAvailableModesFinished(QDBusPendingCallWatcher *call);
     void onGetConfigFinished(QDBusPendingCallWatcher* call);
     void onGetModeRequestFinished(QDBusPendingCallWatcher* call);
     void onSetModeFinished(QDBusPendingCallWatcher* call);
@@ -97,6 +101,7 @@ private:
     void setup();
     void setupCallFinished(int callId);
     void updateSupportedModes(QString modes);
+    void updateAvailableModes(const QString &modes);
     void updateHiddenModes(QString modes);
 
 private:
