@@ -1,7 +1,7 @@
 Name:       libusb-moded-qt5
 
 Summary:    A library of Qt5 bindings for usb_moded
-Version:    1.5
+Version:    1.6
 Release:    1
 Group:      System/Libraries
 License:    BSD
@@ -34,7 +34,7 @@ This package contains the development header files for usb_moded Qt bindings.
 %setup -q -n %{name}-%{version}
 
 %build
-%qtc_qmake5
+%qtc_qmake5 "VERSION=%{version}"
 %qtc_make %{?_smp_mflags}
 
 %install
