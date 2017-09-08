@@ -2,7 +2,6 @@ TEMPLATE = lib
 TARGET = usb-moded-qt5
 CONFIG += link_pkgconfig
 PKGCONFIG += usb_moded
-VERSION = 1.4
 
 QT += dbus
 QT -= gui
@@ -42,6 +41,8 @@ INSTALLS += target
 
 pkgconfig.files = $$TARGET.pc
 pkgconfig.path = $$target.path/pkgconfig-qt5
+QMAKE_PKGCONFIG_NAME = lib$$TARGET
+QMAKE_PKGCONFIG_VERSION = $$VERSION
 QMAKE_PKGCONFIG_DESCRIPTION = Qt bindings for usb_moded
 QMAKE_PKGCONFIG_INCDIR = $$headers.path
 QMAKE_PKGCONFIG_LIBDIR = $$target.path
