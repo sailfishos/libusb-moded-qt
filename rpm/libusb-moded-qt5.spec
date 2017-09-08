@@ -25,7 +25,6 @@ This package contains Qt bindings for usb_moded
 Summary:    Development files for usb_moded Qt bindings
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
-Requires:   %{name} = %{version}
 
 %description devel
 This package contains the development header files for usb_moded Qt bindings.
