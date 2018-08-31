@@ -447,9 +447,13 @@ void QUsbModed::onUnhideModeFinished(QDBusPendingCallWatcher* aCall)
 void QUsbModed::onUsbStateChanged(QString aMode)
 {
     DEBUG_(aMode);
-    if (iPrivate->iCurrentMode != aMode) {
-        iPrivate->iCurrentMode = aMode;
-        Q_EMIT currentModeChanged();
+    if (isEvent(aMode)) {
+        Q_EMIT eventReceived(aMode);
+    } else {
+        if (iPrivate->iCurrentMode != aMode) {
+            iPrivate->iCurrentMode = aMode;
+            Q_EMIT currentModeChanged();
+        }
     }
 }
 
