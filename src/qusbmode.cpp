@@ -41,6 +41,11 @@ const QString QUsbMode::Mode::Connected(USB_CONNECTED);
 const QString QUsbMode::Mode::DataInUse(DATA_IN_USE);
 const QString QUsbMode::Mode::Disconnected(USB_DISCONNECTED);
 const QString QUsbMode::Mode::ModeRequest(USB_CONNECTED_DIALOG_SHOW);
+const QString QUsbMode::Mode::PreUnmount(USB_PRE_UNMOUNT);
+const QString QUsbMode::Mode::ReMountFailed(RE_MOUNT_FAILED);
+const QString QUsbMode::Mode::ModeSettingFailed(MODE_SETTING_FAILED);
+const QString QUsbMode::Mode::ChargerConnected(CHARGER_CONNECTED);
+const QString QUsbMode::Mode::ChargerDisconnected(CHARGER_DISCONNECTED);
 
 // Modes (from usb_moded-modes.h)
 const QString QUsbMode::Mode::Undefined(MODE_UNDEFINED);
@@ -55,8 +60,76 @@ const QString QUsbMode::Mode::Adb(MODE_ADB);
 const QString QUsbMode::Mode::PCSuite(MODE_PC_SUITE);
 const QString QUsbMode::Mode::Charging(MODE_CHARGING);
 const QString QUsbMode::Mode::Charger(MODE_CHARGER);
+const QString QUsbMode::Mode::ChargingFallback(MODE_CHARGING_FALLBACK);
+const QString QUsbMode::Mode::Busy(MODE_BUSY);
 
 QUsbMode::QUsbMode(QObject* aParent) :
     QObject(aParent)
 {
+}
+
+bool QUsbMode::isEvent(const QString &modeName)
+{
+    // "Event" is something usb-moded can broadcast as
+    //   com.meego.usb_moded.sig_usb_state_ind(modeName)
+    // but is never returned as result of mode query
+    //   modeName = com.meego.usb_moded.mode_request()
+
+    // The set of possible "events" is hard-coded in usb-moded and
+    // can be assumed to be fairly stable
+    return (modeName == QUsbMode::Mode::Connected ||
+            modeName == QUsbMode::Mode::DataInUse ||
+            modeName == QUsbMode::Mode::Disconnected ||
+            modeName == QUsbMode::Mode::ModeRequest ||
+            modeName == QUsbMode::Mode::PreUnmount ||
+            modeName == QUsbMode::Mode::ReMountFailed ||
+            modeName == QUsbMode::Mode::ModeSettingFailed ||
+            modeName == QUsbMode::Mode::ChargerConnected ||
+            modeName == QUsbMode::Mode::ChargerDisconnected);
+}
+
+bool QUsbMode::isState(const QString &modeName)
+{
+    // "State" is something usb-moded can broadcast as
+    //   com.meego.usb_moded.sig_usb_state_ind(modeName)
+    // and can be returned as result of mode query
+    //   modeName = com.meego.usb_moded.mode_request()
+
+    // The set of "states" depends on configuration files and
+    // thus the only assumption that can be made is: If it is
+    // not an "event", it is a "state".
+    return !isEvent(modeName);
+}
+
+bool QUsbMode::isWaitingState(const QString &modeName)
+{
+    // Busy -> Waiting for usb reconfiguration etc tasks related
+    //         to mode switch to finish.
+
+    // ChargingFallback -> Waiting for device state that allows
+    // mode selection e.g. device to get unlocked.
+
+    // Ask -> Waiting for user to select a mode.
+
+    return (modeName == QUsbMode::Mode::Busy ||
+            modeName == QUsbMode::Mode::ChargingFallback ||
+            modeName == QUsbMode::Mode::Ask);
+}
+
+bool QUsbMode::isFinalState(const QString &modeName)
+{
+    return isState(modeName) && !isWaitingState(modeName);
+}
+
+bool QUsbMode::isDisconnected(const QString &modeName)
+{
+    return (modeName == QUsbMode::Mode::Disconnected ||
+            modeName == QUsbMode::Mode::ChargerDisconnected ||
+            modeName == QUsbMode::Mode::Undefined);
+}
+
+bool QUsbMode::isConnected(const QString &modeName)
+{
+    // Note that "busy" indicates neither connected nor disconnected.
+    return !isDisconnected(modeName) && modeName != QUsbMode::Mode::Busy;
 }

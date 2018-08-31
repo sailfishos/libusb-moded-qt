@@ -47,6 +47,11 @@ class QUSBMODED_EXPORT QUsbMode : public QObject
     Q_PROPERTY(QString DATA_IN_USE READ DATA_IN_USE CONSTANT)
     Q_PROPERTY(QString USB_DISCONNECTED READ USB_DISCONNECTED CONSTANT)
     Q_PROPERTY(QString USB_CONNECTED_DIALOG_SHOW READ USB_CONNECTED_DIALOG_SHOW CONSTANT)
+    Q_PROPERTY(QString USB_PRE_UNMOUNT READ USB_PRE_UNMOUNT CONSTANT)
+    Q_PROPERTY(QString RE_MOUNT_FAILED READ RE_MOUNT_FAILED CONSTANT)
+    Q_PROPERTY(QString MODE_SETTING_FAILED READ MODE_SETTING_FAILED CONSTANT)
+    Q_PROPERTY(QString CHARGER_CONNECTED READ CHARGER_CONNECTED CONSTANT)
+    Q_PROPERTY(QString CHARGER_DISCONNECTED READ CHARGER_DISCONNECTED CONSTANT)
 
     // Modes (from usb_moded-modes.h)
     Q_PROPERTY(QString MODE_UNDEFINED READ MODE_UNDEFINED CONSTANT)
@@ -61,6 +66,8 @@ class QUSBMODED_EXPORT QUsbMode : public QObject
     Q_PROPERTY(QString MODE_PC_SUITE READ MODE_PC_SUITE CONSTANT)
     Q_PROPERTY(QString MODE_CHARGING READ MODE_CHARGING CONSTANT)
     Q_PROPERTY(QString MODE_CHARGER READ MODE_CHARGER CONSTANT)
+    Q_PROPERTY(QString MODE_CHARGING_FALLBACK READ MODE_CHARGING_FALLBACK CONSTANT)
+    Q_PROPERTY(QString MODE_BUSY READ MODE_BUSY CONSTANT)
 
 public:
     class Mode {
@@ -70,6 +77,11 @@ public:
         static const QString DataInUse;
         static const QString Disconnected;
         static const QString ModeRequest;
+        static const QString PreUnmount;
+        static const QString ReMountFailed;
+        static const QString ModeSettingFailed;
+        static const QString ChargerConnected;
+        static const QString ChargerDisconnected;
 
         // Modes (from usb_moded-modes.h)
         static const QString Undefined;
@@ -84,6 +96,8 @@ public:
         static const QString PCSuite;
         static const QString Charging;
         static const QString Charger;
+        static const QString ChargingFallback;
+        static const QString Busy;
 
     private:
         Mode(); // Disallow instantiation
@@ -91,12 +105,25 @@ public:
 
     QUsbMode(QObject* parent = NULL);
 
+    Q_INVOKABLE static bool isEvent(const QString &modeName);
+    Q_INVOKABLE static bool isState(const QString &modeName);
+    Q_INVOKABLE static bool isWaitingState(const QString &modeName);
+    Q_INVOKABLE static bool isFinalState(const QString &modeName);
+    Q_INVOKABLE static bool isConnected(const QString &modeName);
+    Q_INVOKABLE static bool isDisconnected(const QString &modeName);
+
 private:
     // Getters for QML constants
     QString USB_CONNECTED() const { return Mode::Connected; }
     QString DATA_IN_USE() const { return Mode::DataInUse; }
     QString USB_DISCONNECTED() const { return Mode::Disconnected; }
     QString USB_CONNECTED_DIALOG_SHOW() const { return Mode::ModeRequest; }
+    QString USB_PRE_UNMOUNT() const { return Mode::PreUnmount; }
+    QString RE_MOUNT_FAILED() const { return Mode::ReMountFailed; }
+    QString MODE_SETTING_FAILED() const { return Mode::ModeSettingFailed; }
+    QString CHARGER_CONNECTED() const { return Mode::ChargerConnected; }
+    QString CHARGER_DISCONNECTED() const { return Mode::ChargerDisconnected; }
+
     QString MODE_UNDEFINED() const { return Mode::Undefined; }
     QString MODE_ASK() const { return Mode::Ask; }
     QString MODE_MASS_STORAGE() const { return Mode::MassStorage; }
@@ -109,6 +136,8 @@ private:
     QString MODE_PC_SUITE() const { return Mode::PCSuite; }
     QString MODE_CHARGING() const { return Mode::Charging; }
     QString MODE_CHARGER() const { return Mode::Charger; }
+    QString MODE_CHARGING_FALLBACK() const { return Mode::ChargingFallback; }
+    QString MODE_BUSY() const { return Mode::Busy; }
 };
 
 #endif // QUSBMODED_H
