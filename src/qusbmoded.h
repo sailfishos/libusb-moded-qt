@@ -74,6 +74,7 @@ Q_SIGNALS:
     void supportedModesChanged();
     void availableModesChanged();
     void currentModeChanged();
+    void eventReceived(QString event);
     void configModeChanged();
     void usbStateError(QString error);
     void hiddenModesChanged();

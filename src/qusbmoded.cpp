@@ -398,10 +398,10 @@ void QUsbModed::onSetModeFinished(QDBusPendingCallWatcher* aCall)
     if (!reply.isError()) {
         QString mode = reply.value();
         DEBUG_(mode);
-        if (iPrivate->iCurrentMode != mode) {
-            iPrivate->iCurrentMode = mode;
-            Q_EMIT currentModeChanged();
-        }
+        // Note: Getting a reply does not indicate mode change.
+        //       Even accepted requests could get translated to
+        //       something else (e.g. charging only) if there
+        //       are problems during mode activation
     } else {
         DEBUG_(reply.error());
     }
@@ -447,9 +447,13 @@ void QUsbModed::onUnhideModeFinished(QDBusPendingCallWatcher* aCall)
 void QUsbModed::onUsbStateChanged(QString aMode)
 {
     DEBUG_(aMode);
-    if (iPrivate->iCurrentMode != aMode) {
-        iPrivate->iCurrentMode = aMode;
-        Q_EMIT currentModeChanged();
+    if (isEvent(aMode)) {
+        Q_EMIT eventReceived(aMode);
+    } else {
+        if (iPrivate->iCurrentMode != aMode) {
+            iPrivate->iCurrentMode = aMode;
+            Q_EMIT currentModeChanged();
+        }
     }
 }
 
