@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Jolla Ltd.
+ * Copyright (C) 2015-2019 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -42,6 +42,7 @@
 #define USB_MODED_CALL_MODE_REQUEST (0x04)
 #define USB_MODED_CALL_GET_HIDDEN   (0x08)
 #define USB_MODED_CALL_GET_AVAILABLE_MODES (0x10)
+#define USB_MODED_CALL_GET_TARGET_MODE (0x20)
 
 class QUsbModed::Private
 {
@@ -54,6 +55,7 @@ public:
     QStringList iHiddenModes;
     QString iConfigMode;
     QString iCurrentMode;
+    QString iTargetMode;
     QDBusConnection iBus;
     QUsbModedInterface* iInterface;
     int iPendingCalls;
@@ -119,6 +121,11 @@ bool QUsbModed::available() const
 QString QUsbModed::currentMode() const
 {
     return iPrivate->iCurrentMode;
+}
+
+QString QUsbModed::targetMode() const
+{
+    return iPrivate->iTargetMode;
 }
 
 QString QUsbModed::configMode() const
@@ -200,8 +207,14 @@ void QUsbModed::setup()
     iPrivate->iInterface = new QUsbModedInterface(USB_MODE_SERVICE,
         USB_MODE_OBJECT, iPrivate->iBus, this);
     connect(iPrivate->iInterface,
-        SIGNAL(sig_usb_state_ind(QString)),
+        SIGNAL(sig_usb_target_state_ind(QString)),
+        SLOT(onUsbTargetStateChanged(QString)));
+    connect(iPrivate->iInterface,
+        SIGNAL(sig_usb_current_state_ind(QString)),
         SLOT(onUsbStateChanged(QString)));
+    connect(iPrivate->iInterface,
+        SIGNAL(sig_usb_event_ind(QString)),
+        SLOT(onUsbEventReceived(QString)));
     connect(iPrivate->iInterface,
         SIGNAL(sig_usb_config_ind(QString,QString,QString)),
         SLOT(onUsbConfigChanged(QString,QString,QString)));
@@ -238,6 +251,12 @@ void QUsbModed::setup()
         iPrivate->iInterface->get_config(), iPrivate->iInterface),
         SIGNAL(finished(QDBusPendingCallWatcher*)),
         SLOT(onGetConfigFinished(QDBusPendingCallWatcher*)));
+
+    iPrivate->iPendingCalls |= USB_MODED_CALL_GET_TARGET_MODE;
+    connect(new QDBusPendingCallWatcher(
+        iPrivate->iInterface->get_target_state(), iPrivate->iInterface),
+        SIGNAL(finished(QDBusPendingCallWatcher*)),
+        SLOT(onGetTargetModeFinished(QDBusPendingCallWatcher*)));
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_MODE_REQUEST;
     connect(new QDBusPendingCallWatcher(
@@ -309,15 +328,28 @@ void QUsbModed::onGetModeRequestFinished(QDBusPendingCallWatcher* aCall)
             iPrivate->iCurrentMode = mode;
             Q_EMIT currentModeChanged();
         }
-        if (iPrivate->iCurrentMode != mode) {
-            iPrivate->iCurrentMode = mode;
-            Q_EMIT currentModeChanged();
-        }
     } else {
         DEBUG_(reply.error());
     }
     aCall->deleteLater();
     setupCallFinished(USB_MODED_CALL_MODE_REQUEST);
+}
+
+void QUsbModed::onGetTargetModeFinished(QDBusPendingCallWatcher* aCall)
+{
+    QDBusPendingReply<QString> reply(*aCall);
+    if (!reply.isError()) {
+        QString mode = reply.value();
+        DEBUG_(mode);
+        if (iPrivate->iTargetMode != mode) {
+            iPrivate->iTargetMode = mode;
+            Q_EMIT targetModeChanged();
+        }
+    } else {
+        DEBUG_(reply.error());
+    }
+    aCall->deleteLater();
+    setupCallFinished(USB_MODED_CALL_GET_TARGET_MODE);
 }
 
 void QUsbModed::onGetHiddenFinished(QDBusPendingCallWatcher* aCall)
@@ -447,13 +479,24 @@ void QUsbModed::onUnhideModeFinished(QDBusPendingCallWatcher* aCall)
 void QUsbModed::onUsbStateChanged(QString aMode)
 {
     DEBUG_(aMode);
-    if (isEvent(aMode)) {
-        Q_EMIT eventReceived(aMode);
-    } else {
-        if (iPrivate->iCurrentMode != aMode) {
-            iPrivate->iCurrentMode = aMode;
-            Q_EMIT currentModeChanged();
-        }
+    if (iPrivate->iCurrentMode != aMode) {
+        iPrivate->iCurrentMode = aMode;
+        Q_EMIT currentModeChanged();
+    }
+}
+
+void QUsbModed::onUsbEventReceived(QString aEvent)
+{
+    DEBUG_(aEvent);
+    Q_EMIT eventReceived(aEvent);
+}
+
+void QUsbModed::onUsbTargetStateChanged(QString aMode)
+{
+    DEBUG_(aMode);
+    if (iPrivate->iTargetMode != aMode) {
+        iPrivate->iTargetMode = aMode;
+        Q_EMIT targetModeChanged();
     }
 }
 
