@@ -42,7 +42,7 @@ class QUSBMODED_EXPORT QUsbMode : public QObject
 {
     Q_OBJECT
 
-    // States (from usb_moded-dbus.h)
+    // Transient Modes / "Events" (from usb_moded-dbus.h)
     Q_PROPERTY(QString USB_CONNECTED READ USB_CONNECTED CONSTANT)
     Q_PROPERTY(QString DATA_IN_USE READ DATA_IN_USE CONSTANT)
     Q_PROPERTY(QString USB_DISCONNECTED READ USB_DISCONNECTED CONSTANT)
@@ -53,7 +53,7 @@ class QUSBMODED_EXPORT QUsbMode : public QObject
     Q_PROPERTY(QString CHARGER_CONNECTED READ CHARGER_CONNECTED CONSTANT)
     Q_PROPERTY(QString CHARGER_DISCONNECTED READ CHARGER_DISCONNECTED CONSTANT)
 
-    // Modes (from usb_moded-modes.h)
+    // Persistent Modes / "States" (from usb_moded-modes.h)
     Q_PROPERTY(QString MODE_UNDEFINED READ MODE_UNDEFINED CONSTANT)
     Q_PROPERTY(QString MODE_ASK READ MODE_ASK CONSTANT)
     Q_PROPERTY(QString MODE_MASS_STORAGE READ MODE_MASS_STORAGE CONSTANT)
@@ -72,7 +72,7 @@ class QUSBMODED_EXPORT QUsbMode : public QObject
 public:
     class Mode {
     public:
-        // States (from usb_moded-dbus.h)
+        // Transient Modes / "Events" (from usb_moded-dbus.h)
         static const QString Connected;
         static const QString DataInUse;
         static const QString Disconnected;
@@ -83,7 +83,7 @@ public:
         static const QString ChargerConnected;
         static const QString ChargerDisconnected;
 
-        // Modes (from usb_moded-modes.h)
+        // Persistent Modes / "States" (from usb_moded-modes.h)
         static const QString Undefined;
         static const QString Ask;
         static const QString MassStorage;
