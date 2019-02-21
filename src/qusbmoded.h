@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Jolla Ltd.
+ * Copyright (C) 2015-2019 Jolla Ltd.
  * Contact: Slava Monich <slava.monich@jolla.com>
  *
  * You may use this file under the terms of the BSD license as follows:
@@ -48,6 +48,7 @@ class QUSBMODED_EXPORT QUsbModed : public QUsbMode
     Q_PROPERTY(QStringList availableModes READ availableModes NOTIFY availableModesChanged)
     Q_PROPERTY(QStringList hiddenModes READ hiddenModes NOTIFY hiddenModesChanged)
     Q_PROPERTY(QString currentMode READ currentMode WRITE setCurrentMode NOTIFY currentModeChanged)
+    Q_PROPERTY(QString targetMode READ targetMode NOTIFY targetModeChanged)
     Q_PROPERTY(QString configMode READ configMode WRITE setConfigMode NOTIFY configModeChanged)
 
 public:
@@ -58,6 +59,7 @@ public:
     QStringList supportedModes() const;
     QStringList availableModes() const;
     QString currentMode() const;
+    QString targetMode() const;
     QString configMode() const;
 
     bool setCurrentMode(QString mode);
@@ -74,6 +76,7 @@ Q_SIGNALS:
     void supportedModesChanged();
     void availableModesChanged();
     void currentModeChanged();
+    void targetModeChanged();
     void eventReceived(QString event);
     void configModeChanged();
     void usbStateError(QString error);
@@ -88,6 +91,7 @@ private Q_SLOTS:
     void onGetAvailableModesFinished(QDBusPendingCallWatcher *call);
     void onGetConfigFinished(QDBusPendingCallWatcher* call);
     void onGetModeRequestFinished(QDBusPendingCallWatcher* call);
+    void onGetTargetModeFinished(QDBusPendingCallWatcher* aCall);
     void onSetModeFinished(QDBusPendingCallWatcher* call);
     void onSetConfigFinished(QDBusPendingCallWatcher* call);
     void onHideModeFinished(QDBusPendingCallWatcher* call);
@@ -95,6 +99,8 @@ private Q_SLOTS:
     void onGetHiddenFinished(QDBusPendingCallWatcher* call);
     void onUsbConfigChanged(QString section, QString key, QString value);
     void onUsbStateChanged(QString mode);
+    void onUsbEventReceived(QString event);
+    void onUsbTargetStateChanged(QString mode);
     void onUsbSupportedModesChanged(QString modes);
     void onUsbHiddenModesChanged(QString modes);
 
