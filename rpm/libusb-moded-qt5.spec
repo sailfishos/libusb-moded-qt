@@ -10,8 +10,8 @@ Source0:    %{name}-%{version}.tar.bz2
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-Requires:       usb-moded >= 0.86.0+mer29
-BuildRequires:  usb-moded-devel >= 0.86.0+mer29
+Requires:       usb-moded >= 0.86.0+mer39
+BuildRequires:  usb-moded-devel >= 0.86.0+mer39
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(Qt5DBus)
 BuildRequires:  pkgconfig(usb_moded)
