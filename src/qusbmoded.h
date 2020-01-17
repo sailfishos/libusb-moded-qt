@@ -109,6 +109,7 @@ private:
     void setupCallFinished(int callId);
     void updateSupportedModes(QString modes);
     void updateAvailableModes(const QString &modes);
+    void checkAvailableModesForUser();
     void updateHiddenModes(QString modes);
 
 private:
