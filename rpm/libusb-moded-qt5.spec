@@ -3,9 +3,8 @@ Name:       libusb-moded-qt5
 Summary:    A library of Qt5 bindings for usb_moded
 Version:    1.8
 Release:    1
-Group:      System/Libraries
 License:    BSD
-URL:        https://github.com/nemomobile/libusb-moded-qt5
+URL:        https://github.com/sailfishos/libusb-moded-qt
 Source0:    %{name}-%{version}.tar.bz2
 
 Requires(post): /sbin/ldconfig
@@ -24,7 +23,6 @@ This package contains Qt bindings for usb_moded
 
 %package devel
 Summary:    Development files for usb_moded Qt bindings
-Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
 
 %description devel
@@ -38,7 +36,6 @@ This package contains the development header files for usb_moded Qt bindings.
 %qtc_make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 %qmake5_install
 
 %post -p /sbin/ldconfig
@@ -47,6 +44,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
+%license LICENSE.BSD
 %{_libdir}/%{name}.so*
 
 %files devel
