@@ -369,7 +369,11 @@ void QUsbModed::onGetHiddenFinished(QDBusPendingCallWatcher* aCall)
 
 void QUsbModed::updateHiddenModes(QString aModes)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     const QStringList result = aModes.split(',', QString::SkipEmptyParts);
+#else
+    const QStringList result = aModes.split(',', Qt::SkipEmptyParts);
+#endif
     const int n = result.count();
     QStringList modes;
     for (int i=0; i<n; i++) {
@@ -384,7 +388,11 @@ void QUsbModed::updateHiddenModes(QString aModes)
 
 void QUsbModed::updateSupportedModes(QString aModes)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     const QStringList result = aModes.split(',', QString::SkipEmptyParts);
+#else
+    const QStringList result = aModes.split(',', Qt::SkipEmptyParts);
+#endif
     const int n = result.count();
     QStringList modes;
     for (int i=0; i<n; i++) {
@@ -399,7 +407,11 @@ void QUsbModed::updateSupportedModes(QString aModes)
 
 void QUsbModed::updateAvailableModes(const QString &aModes)
 {
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
     const QStringList result = aModes.split(',', QString::SkipEmptyParts);
+#else
+    const QStringList result = aModes.split(',', Qt::SkipEmptyParts);
+#endif
     const int n = result.count();
     QStringList modes;
     for (int i=0; i<n; i++) {
