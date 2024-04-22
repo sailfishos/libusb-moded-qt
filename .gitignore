@@ -1,2 +1,7 @@
 libusb-moded-qt.pro.user
 build
+*.o
+*.so
+*.so.*
+moc_*
+Makefile
