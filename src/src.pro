@@ -5,7 +5,6 @@ PKGCONFIG += usb_moded
 
 QT += dbus
 QT -= gui
-QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 
 DEFINES += QUSBMODED_LIBRARY
 
