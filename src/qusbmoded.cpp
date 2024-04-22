@@ -56,14 +56,12 @@ public:
     QString iConfigMode;
     QString iCurrentMode;
     QString iTargetMode;
-    QDBusConnection iBus;
     QUsbModedInterface* iInterface;
     int iPendingCalls;
     bool iAvailable;
 
     Private() :
-        iBus(QDBusConnection::systemBus()),
-        iInterface(NULL),
+        iInterface(nullptr),
         iPendingCalls(0),
         iAvailable(false) {}
 };
@@ -72,23 +70,21 @@ public:
 const QString QUsbModed::Private::UsbModeSection("usbmode");
 const QString QUsbModed::Private::UsbModeKeyMode("mode");
 
-QUsbModed::QUsbModed(QObject* aParent) :
-    QUsbMode(aParent),
-    iPrivate(new Private)
+QUsbModed::QUsbModed(QObject* aParent)
+    : QUsbMode(aParent)
+    , iPrivate(new Private)
 {
     QDBusServiceWatcher* serviceWatcher =
-        new QDBusServiceWatcher(USB_MODE_SERVICE, iPrivate->iBus,
+        new QDBusServiceWatcher(USB_MODE_SERVICE, QDBusConnection::systemBus(),
             QDBusServiceWatcher::WatchForRegistration |
             QDBusServiceWatcher::WatchForUnregistration, this);
 
-    connect(serviceWatcher,
-        SIGNAL(serviceRegistered(QString)),
-        SLOT(onServiceRegistered(QString)));
-    connect(serviceWatcher,
-        SIGNAL(serviceUnregistered(QString)),
-        SLOT(onServiceUnregistered(QString)));
+    connect(serviceWatcher, &QDBusServiceWatcher::serviceRegistered,
+            this, &QUsbModed::onServiceRegistered);
+    connect(serviceWatcher, &QDBusServiceWatcher::serviceUnregistered,
+            this, &QUsbModed::onServiceUnregistered);
 
-    if (iPrivate->iBus.interface()->isServiceRegistered(USB_MODE_SERVICE)) {
+    if (QDBusConnection::systemBus().interface()->isServiceRegistered(USB_MODE_SERVICE)) {
         setup();
     }
 }
@@ -136,10 +132,10 @@ QString QUsbModed::configMode() const
 bool QUsbModed::setCurrentMode(QString aMode)
 {
     if (iPrivate->iInterface) {
-        connect(new QDBusPendingCallWatcher(
-            iPrivate->iInterface->set_mode(aMode), iPrivate->iInterface),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onSetModeFinished(QDBusPendingCallWatcher*)));
+        auto *pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->set_mode(aMode), this);
+
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &QUsbModed::onSetModeFinished);
         return true;
     }
     return false;
@@ -148,10 +144,9 @@ bool QUsbModed::setCurrentMode(QString aMode)
 bool QUsbModed::setConfigMode(QString aMode)
 {
     if (iPrivate->iInterface) {
-        connect(new QDBusPendingCallWatcher(
-            iPrivate->iInterface->set_config(aMode), iPrivate->iInterface),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onSetConfigFinished(QDBusPendingCallWatcher*)));
+        auto *pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->set_config(aMode), this);
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &QUsbModed::onSetConfigFinished);
         return true;
     }
     return false;
@@ -160,10 +155,9 @@ bool QUsbModed::setConfigMode(QString aMode)
 bool QUsbModed::hideMode(QString mode)
 {
     if (iPrivate->iInterface) {
-        connect(new QDBusPendingCallWatcher(
-            iPrivate->iInterface->hide_mode(mode), iPrivate->iInterface),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onHideModeFinished(QDBusPendingCallWatcher*)));
+        auto *pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->hide_mode(mode), this);
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &QUsbModed::onHideModeFinished);
         return true;
     }
     return false;
@@ -172,10 +166,9 @@ bool QUsbModed::hideMode(QString mode)
 bool QUsbModed::unhideMode(QString mode)
 {
     if (iPrivate->iInterface) {
-        connect(new QDBusPendingCallWatcher(
-            iPrivate->iInterface->unhide_mode(mode), iPrivate->iInterface),
-            SIGNAL(finished(QDBusPendingCallWatcher*)),
-            SLOT(onUnhideModeFinished(QDBusPendingCallWatcher*)));
+        auto *pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->unhide_mode(mode), this);
+        connect(pendingCall, &QDBusPendingCallWatcher::finished,
+                this, &QUsbModed::onUnhideModeFinished);
         return true;
     }
     return false;
@@ -191,10 +184,10 @@ void QUsbModed::onServiceUnregistered(QString aService)
 {
     DEBUG_(aService);
     iPrivate->iPendingCalls = 0;
-    if (iPrivate->iInterface) {
-        delete iPrivate->iInterface;
-        iPrivate->iInterface = NULL;
-    }
+
+    delete iPrivate->iInterface;
+    iPrivate->iInterface = nullptr;
+
     if (iPrivate->iAvailable) {
         iPrivate->iAvailable = false;
         Q_EMIT availableChanged();
@@ -204,8 +197,10 @@ void QUsbModed::onServiceUnregistered(QString aService)
 void QUsbModed::setup()
 {
     delete iPrivate->iInterface; // That cancels whatever is in progress
+
     iPrivate->iInterface = new QUsbModedInterface(USB_MODE_SERVICE,
-        USB_MODE_OBJECT, iPrivate->iBus, this);
+        USB_MODE_OBJECT, QDBusConnection::systemBus(), this);
+
     connect(iPrivate->iInterface,
         SIGNAL(sig_usb_target_state_ind(QString)),
         SLOT(onUsbTargetStateChanged(QString)));
@@ -234,41 +229,34 @@ void QUsbModed::setup()
 
     // Request the current state
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_MODES;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->get_modes(), iPrivate->iInterface),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetModesFinished(QDBusPendingCallWatcher*)));
+    auto *pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->get_modes(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetModesFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_AVAILABLE_MODES;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->get_available_modes_for_user(), iPrivate->iInterface),
-        &QDBusPendingCallWatcher::finished,
-        this,
-        &QUsbModed::onGetAvailableModesFinished);
+    pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->get_available_modes_for_user(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetAvailableModesFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_CONFIG;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->get_config(), iPrivate->iInterface),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetConfigFinished(QDBusPendingCallWatcher*)));
+    pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->get_config(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetConfigFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_TARGET_MODE;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->get_target_state(), iPrivate->iInterface),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetTargetModeFinished(QDBusPendingCallWatcher*)));
+    pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->get_target_state(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetTargetModeFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_MODE_REQUEST;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->mode_request(), iPrivate->iInterface),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetModeRequestFinished(QDBusPendingCallWatcher*)));
+    pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->mode_request(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetModeRequestFinished);
 
     iPrivate->iPendingCalls |= USB_MODED_CALL_GET_HIDDEN;
-    connect(new QDBusPendingCallWatcher(
-        iPrivate->iInterface->get_hidden(), iPrivate->iInterface),
-        SIGNAL(finished(QDBusPendingCallWatcher*)),
-        SLOT(onGetHiddenFinished(QDBusPendingCallWatcher*)));
+    pendingCall = new QDBusPendingCallWatcher(iPrivate->iInterface->get_hidden(), this);
+    connect(pendingCall, &QDBusPendingCallWatcher::finished,
+            this, &QUsbModed::onGetHiddenFinished);
 }
 
 void QUsbModed::onGetModesFinished(QDBusPendingCallWatcher* aCall)
