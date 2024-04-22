@@ -103,7 +103,7 @@ public:
         Mode(); // Disallow instantiation
     };
 
-    QUsbMode(QObject* parent = NULL);
+    QUsbMode(QObject* parent = nullptr);
 
     Q_INVOKABLE static bool isEvent(const QString &modeName);
     Q_INVOKABLE static bool isState(const QString &modeName);

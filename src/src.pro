@@ -5,13 +5,8 @@ PKGCONFIG += usb_moded
 
 QT += dbus
 QT -= gui
-QMAKE_CXXFLAGS += -Wno-unused-parameter -Wno-psabi
 
 DEFINES += QUSBMODED_LIBRARY
-
-CONFIG(debug, debug|release) {
-  DEFINES += QUSBMODED_DEBUG=1
-}
 
 SOURCES += \
     qusbmode.cpp \
@@ -23,8 +18,7 @@ PUBLIC_HEADERS += \
     qusbmoded_types.h
 
 HEADERS += \
-  $$PUBLIC_HEADERS \
-  qusbmoded_debug.h
+  $$PUBLIC_HEADERS
 
 USB_MODED_INCLUDE_PATH = $$system(for d in `pkg-config --cflags-only-I usb_moded` ; do echo $d ; done | grep usb.moded | sed s/^-I//g)
 DBUS_INTERFACES += com_meego_usb_moded
