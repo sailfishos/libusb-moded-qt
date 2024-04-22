@@ -43,11 +43,10 @@ This package contains the development header files for usb_moded Qt bindings.
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %license LICENSE.BSD
-%{_libdir}/%{name}.so*
+%{_libdir}/%{name}.so.*
 
 %files devel
-%defattr(-,root,root,-)
 %{_libdir}/pkgconfig/usb-moded-qt5.pc
+%{_libdir}/%{name}.so
 %{_includedir}/usb-moded-qt5/*.h
